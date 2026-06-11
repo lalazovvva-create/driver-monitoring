@@ -10,14 +10,19 @@ eye_cascade = cv2.CascadeClassifier(
     "haarcascade_eye.xml"
 )
 
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+if not camera.isOpened():
+    print("Не удалось открыть камеру")
+    exit()
 
 while True:
 
     ret, frame = camera.read()
 
     if not ret:
-        break
+        print("Не удалось получить кадр")
+        continue
 
     gray = cv2.cvtColor(
         frame,
@@ -27,7 +32,8 @@ while True:
     faces = face_cascade.detectMultiScale(
         gray,
         scaleFactor=1.1,
-        minNeighbors=5
+        minNeighbors=5,
+        minSize=(80, 80)
     )
 
     for (x, y, w, h) in faces:
@@ -40,11 +46,14 @@ while True:
             2
         )
 
-        roi_gray = gray[y:y+h, x:x+w]
-        roi_color = frame[y:y+h, x:x+w]
+        roi_gray = gray[y:y + h, x:x + w]
+        roi_color = frame[y:y + h, x:x + w]
 
         eyes = eye_cascade.detectMultiScale(
-            roi_gray
+            roi_gray,
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(20, 20)
         )
 
         for (ex, ey, ew, eh) in eyes:
@@ -72,7 +81,9 @@ while True:
         frame
     )
 
-    if cv2.waitKey(1) & 0xFF == ord("q"):
+    key = cv2.waitKey(1) & 0xFF
+
+    if key == ord("q"):
         break
 
 camera.release()
